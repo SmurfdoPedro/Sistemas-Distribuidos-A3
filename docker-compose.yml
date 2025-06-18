@@ -1,0 +1,42 @@
+
+version: '3.8'
+
+services:
+  mongo:
+    image: mongo
+    ports:
+      - "27017:27017"
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  service-a:
+    build: ./service-a
+    ports:
+      - "8001:8000"
+    depends_on:
+      - mongo
+
+  service-b:
+    build: ./service-b
+    ports:
+      - "8002:8000"
+    depends_on:
+      - rabbitmq
+
+  consumer:
+    build:
+      context: ./messaging
+      dockerfile: Dockerfile
+    depends_on:
+      - rabbitmq
+
+  prometheus:
+    image: prom/prometheus
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml
+    ports:
+      - "9090:9090"
